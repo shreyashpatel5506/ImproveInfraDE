@@ -1,0 +1,44 @@
+# --- Build and Dependency Artifacts ---
+# Dependencies (node modules)
+/node_modules
+# BCM4331-specific files used in some Node environments
+/npm-debug.log
+/yarn-error.log
+/pnpm-debug.log
+
+# Production build output
+/dist
+/build
+/out
+
+# --- Development and Environment Files ---
+# Environment variables and secrets
+# IMPORTANT: This prevents uploading API keys, database credentials, etc.
+.env
+.env.*
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Temp files
+/tmp
+
+# --- IDE and Editor Files ---
+# VS Code
+.vscode/
+
+# JetBrains IDEs (WebStorm, IntelliJ)
+.idea/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+
+# --- Test and Coverage ---
+/coverage
+/.nyc_output
