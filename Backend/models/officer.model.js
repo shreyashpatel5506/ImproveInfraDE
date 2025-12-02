@@ -17,6 +17,6 @@ const officerSchema = new mongoose.Schema({
 },
     { timestamps: true });
 
-const User = mongoose.model('User', userSchema);
+const Officer = mongoose.model('User', officerSchema);
 
-export default User;
+export default Officer;
