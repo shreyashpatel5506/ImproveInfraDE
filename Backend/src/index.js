@@ -6,7 +6,7 @@ const port = 8080
 
 app.use(express.json);
 app.get('/', (req, res) => {
-    res.send('Welcome to the Express Backend!');
+    res.send('Welcome to the Express Backend');
 });
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
