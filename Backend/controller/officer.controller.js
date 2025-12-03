@@ -1,8 +1,10 @@
 import express from 'express';
 import Officer from "../models/officer.model.js";
+import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
 
-env = "development"
-jwtSecret = "ImproveInfra"
+const env = "development"
+const jwtSecret = "ImproveInfra"
 
 const generateToken = (officerId, res) => {
     const token = jwt.sign({ officerId }, jwtSecret, {
@@ -31,7 +33,7 @@ export const signUP = async (req, res) => {
         generateToken(newOfficer._id, res);
 
         return res.status(201).json({
-            message: "Officer created created",
+            message: "Officer created ",
             success: true,
             Officer: newOfficer,
         });
@@ -44,19 +46,29 @@ export const signUP = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const officer = await officer.findOne({ email })
 
-        if (!officer) return res.status(400).json({ message: "User does not exist" });
+        // Use the Officer model
+        const officerData = await Officer.findOne({ email });
 
-        const validPassword = await bcrypt.compare(password, officer.password);
-        if (!validPassword) return res.status(400).json({ message: "Invalid password" });
+        if (!officerData) {
+            return res.status(400).json({ message: "User does not exist" });
+        }
 
-        const newofficer = new officer({ email, password: validPassword })
-        await newofficer.save()
-        generateToken(officer._id, res);
-        return res.status(200).json({ message: "Login successful", success: true, officer });
+        const validPassword = await bcrypt.compare(password, officerData.password);
+        if (!validPassword) {
+            return res.status(400).json({ message: "Invalid password" });
+        }
+
+        // Generate token
+        generateToken(officerData._id, res);
+
+        return res.status(200).json({
+            message: "Login successful",
+            success: true,
+            officer: officerData
+        });
 
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
-}
+};

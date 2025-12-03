@@ -4,6 +4,6 @@ import express from 'express';
 const authrouter = express.Router();
 
 authrouter.use('/officerSignup', signUP)
-authrouter.use('/oficerLogin', login)
+authrouter.use('/officerLogin', login)
 
 export default authrouter;

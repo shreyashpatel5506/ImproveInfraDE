@@ -12,7 +12,7 @@ const port = 8080;
 // Middleware setup
 // FIX: express.json needs to be called as a function
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
 // Start the database connection immediately
 connectMongo();
 
