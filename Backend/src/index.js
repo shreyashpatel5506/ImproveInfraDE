@@ -5,6 +5,7 @@ dotenv.config();
 import express from "express";
 import connectMongo from "../db.js";
 import authrouter from "../routes/officerRoute.js";
+import postRoute from "../routes/post.route.js";
 
 const app = express();
 const port = 8080;
@@ -22,6 +23,8 @@ app.get('/', (req, res) => {
 });
 //authroutes
 app.use('/v1/auth', authrouter)
+//post route 
+app.use('/v1/post', postRoute);
 // Start the server
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
