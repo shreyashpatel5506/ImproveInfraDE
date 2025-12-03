@@ -1,8 +1,7 @@
-import { login, signUP } from "../controller/officer.controller";
-import express from express;
-import Officer from "../models/officer.model";
+import { login, signUP } from "../controller/officer.controller.js";
+import express from 'express';
 
-const authrouter = express.router()
+const authrouter = express.Router();
 
 authrouter.use('/officerSignup', signUP)
 authrouter.use('/oficerLogin', login)

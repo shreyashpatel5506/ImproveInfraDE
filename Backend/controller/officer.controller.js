@@ -1,5 +1,23 @@
-import express from express;
-import Officer from "../models/officer.model";
+import express from 'express';
+import Officer from "../models/officer.model.js";
+
+env = "development"
+jwtSecret = "ImproveInfra"
+
+const generateToken = (officerId, res) => {
+    const token = jwt.sign({ officerId }, jwtSecret, {
+        expiresIn: "7d",
+    });
+
+    res.cookie("jwt", token, {
+        httpOnly: true,
+        secure: env !== "development",
+        sameSite: "strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return token;
+};
 
 export const signUP = async (req, res) => {
     try {
@@ -18,8 +36,8 @@ export const signUP = async (req, res) => {
             Officer: newOfficer,
         });
     } catch (error) {
-        return res.status(500).json({ message: err.message });
         console.log("error fetching and officer not created ")
+        return res.status(500).json({ message: error.message });
     }
 }
 
@@ -33,8 +51,11 @@ export const login = async (req, res) => {
         const validPassword = await bcrypt.compare(password, officer.password);
         if (!validPassword) return res.status(400).json({ message: "Invalid password" });
 
+        const newofficer = new officer({ email, password: validPassword })
+        await newofficer.save()
         generateToken(officer._id, res);
         return res.status(200).json({ message: "Login successful", success: true, officer });
+
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
