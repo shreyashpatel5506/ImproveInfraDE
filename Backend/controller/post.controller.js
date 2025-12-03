@@ -1,100 +1,179 @@
-import { v2 as cloudinary } from "cloudinary";
 import Post from "../models/post.model.js";
-import Busboy from "busboy";   // built-in by Google + no config needed
-import dotenv from "dotenv"
+import { v2 as cloudinary } from "cloudinary";
 
-dotenv.config()
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
+// === CREATE POST ===========================================================
 export const createPost = async (req, res) => {
     try {
-        const bb = Busboy({ headers: req.headers });
+        const { title, description, category, department, image } = req.body;
 
-        let formData = {
-            title: "",
-            description: "",
-            category: "",
-            department: "",
-        };
+        if (!image) return res.status(400).json({ message: "Image is required" });
 
-        let uploadPromise;
-
-        bb.on("field", (name, value) => {
-            formData[name] = value;
+        const uploaded = await cloudinary.uploader.upload(image, {
+            folder: "posts",
         });
 
-        bb.on("file", (name, file, info) => {
-            const cloudUpload = new Promise((resolve, reject) => {
-                const stream = cloudinary.uploader.upload_stream(
-                    { folder: "posts" },
-                    (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
-                    }
-                );
-                file.pipe(stream);
-            });
-            uploadPromise = cloudUpload;
+        const newPost = await Post.create({
+            title,
+            description,
+            category,
+            department,
+            imageUrl: uploaded.secure_url,
+            imagePublicId: uploaded.public_id,
         });
 
-        bb.on("finish", async () => {
-            if (!uploadPromise)
-                return res.status(400).json({ message: "Image missing" });
-
-            const uploaded = await uploadPromise;
-
-            const newPost = await Post.create({
-                ...formData,
-                imageUrl: uploaded.secure_url,
-                imagePublicId: uploaded.public_id,
-            });
-
-            res.status(201).json({
-                message: "Post created successfully",
-                post: newPost,
-            });
+        res.status(201).json({
+            message: "Post created successfully",
+            post: newPost,
         });
 
-        req.pipe(bb);
     } catch (error) {
         console.error("Create Post Error:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
 
+// === GET ALL POSTS =========================================================
+export const getAllPosts = async (req, res) => {
+    try {
+        const posts = await Post.find().sort({ createdAt: -1 });
+        res.json(posts);
+    } catch (error) {
+        console.error("Get Posts Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
 
+// === GET SINGLE POST + INCREASE VIEWS =====================================
+export const getSinglePost = async (req, res) => {
+    try {
+        const { id } = req.params;
 
+        const post = await Post.findById(id);
+        if (!post) return res.status(404).json({ message: "Post not found" });
+
+        post.views += 1;
+        await post.save();
+
+        res.json(post);
+    } catch (error) {
+        console.error("Get Single Post Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// === ADD COMMENT ===========================================================
+export const addComment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { text } = req.body;
+
+        if (!text) return res.status(400).json({ message: "Comment cannot be empty" });
+
+        const post = await Post.findById(id);
+        if (!post) return res.status(404).json({ message: "Post not found" });
+
+        post.comments.push({ text });
+        post.commentsCount = post.comments.length;
+
+        await post.save();
+
+        res.json({
+            message: "Comment added",
+            comments: post.comments,
+            commentsCount: post.commentsCount,
+        });
+
+    } catch (error) {
+        console.error("Add Comment Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// === GET COMMENTS ==========================================================
+export const getComments = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const post = await Post.findById(id).select("comments commentsCount");
+        if (!post) return res.status(404).json({ message: "Post not found" });
+
+        res.json({
+            comments: post.comments,
+            commentsCount: post.commentsCount,
+        });
+
+    } catch (error) {
+        console.error("Get Comments Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// === LIKE POST =============================================================
+export const likePost = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const post = await Post.findById(id);
+        if (!post) return res.status(404).json({ message: "Post not found" });
+
+        post.likesCount += 1;
+        await post.save();
+
+        res.json({ likesCount: post.likesCount });
+
+    } catch (error) {
+        console.error("Like Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// === CHANGE STATUS =========================================================
+export const changeStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const valid = ["Pending", "In Progress", "Resolved"];
+        if (!valid.includes(status)) {
+            return res.status(400).json({ message: "Invalid status" });
+        }
+
+        const updated = await Post.findByIdAndUpdate(
+            id,
+            { status },
+            { new: true }
+        );
+
+        if (!updated) return res.status(404).json({ message: "Post not found" });
+
+        res.json({
+            message: "Status updated",
+            post: updated,
+        });
+
+    } catch (error) {
+        console.error("Change Status Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// === DELETE POST + DELETE CLOUDINARY IMAGE ================================
 export const deletePost = async (req, res) => {
     try {
-        const postId = req.params.id;
-        const officerId = req.officer.id; // from token
+        const { id } = req.params;
 
-        const post = await Post.findById(postId);
+        const post = await Post.findById(id);
+        if (!post) return res.status(404).json({ message: "Post not found" });
 
-        if (!post) {
-            return res.status(404).json({ message: "Post not found" });
-        }
+        // delete image from Cloudinary
+        await cloudinary.uploader.destroy(post.imagePublicId);
 
-        // Only owner can delete
-        if (post.createdBy.toString() !== officerId) {
-            return res.status(403).json({ message: "Unauthorized" });
-        }
+        await Post.findByIdAndDelete(id);
 
-        // Delete cloudinary image
-        if (post.imagePublicId) {
-            await cloudinary.uploader.destroy(post.imagePublicId);
-        }
-
-        await Post.findByIdAndDelete(postId);
-
-        return res.status(200).json({ message: "Post deleted successfully" });
+        res.json({ message: "Post deleted successfully" });
 
     } catch (error) {
         console.error("Delete Post Error:", error);
-        return res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: "Server error" });
     }
 };

@@ -1,10 +1,28 @@
-import express from "express"
-import { createPost, deletePost } from "../controller/post.controller.js"
+import express from "express";
+import {
+    createPost,
+    getAllPosts,
+    getSinglePost,
+    addComment,
+    getComments,
+    likePost,
+    changeStatus,
+    deletePost
+} from "../controller/post.controller.js";
 import { verifyToken } from "../middlewear/verifytoken.js";
 
-const postRoute = express.Router()
+const router = express.Router();
 
-postRoute.post('/createPost', createPost);
-postRoute.delete("/delete/:id", verifyToken, deletePost);
+// Public
+router.get("/", getAllPosts);
+router.get("/:id", getSinglePost);
 
-export default postRoute;
+// Auth required
+router.post("/create", createPost);
+router.post("/comment/:id", addComment);
+router.get("/comments/:id", getComments);
+router.patch("/status/:id", verifyToken, changeStatus);
+router.patch("/like/:id", likePost);
+router.delete("/delete/:id", verifyToken, deletePost);
+
+export default router;
