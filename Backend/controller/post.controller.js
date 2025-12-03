@@ -4,9 +4,10 @@ import { v2 as cloudinary } from "cloudinary";
 // === CREATE POST ===========================================================
 export const createPost = async (req, res) => {
     try {
-        const { title, description, category, department, image } = req.body;
+        const { title, description, category, department, location, image } = req.body;
 
         if (!image) return res.status(400).json({ message: "Image is required" });
+        if (!location) return res.status(400).json({ message: "Location is required" });
 
         const uploaded = await cloudinary.uploader.upload(image, {
             folder: "posts",
@@ -17,6 +18,7 @@ export const createPost = async (req, res) => {
             description,
             category,
             department,
+            location, // 🔥 added
             imageUrl: uploaded.secure_url,
             imagePublicId: uploaded.public_id,
         });
@@ -31,6 +33,7 @@ export const createPost = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
 
 // === GET ALL POSTS =========================================================
 export const getAllPosts = async (req, res) => {
@@ -177,3 +180,33 @@ export const deletePost = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+export const setPriority = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { priority } = req.body;
+
+        const valid = ["Low", "Medium", "High", "Critical"];
+        if (!valid.includes(priority)) {
+            return res.status(400).json({ message: "Invalid priority value" });
+        }
+
+        const updated = await Post.findByIdAndUpdate(
+            id,
+            { priority },
+            { new: true }
+        );
+
+        if (!updated) return res.status(404).json({ message: "Post not found" });
+
+        res.json({
+            message: "Priority updated successfully",
+            post: updated,
+        });
+
+    } catch (error) {
+        console.error("Set Priority Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+

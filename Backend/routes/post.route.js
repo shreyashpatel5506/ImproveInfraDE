@@ -7,7 +7,8 @@ import {
     getComments,
     likePost,
     changeStatus,
-    deletePost
+    deletePost,
+    setPriority
 } from "../controller/post.controller.js";
 import { verifyToken } from "../middlewear/verifytoken.js";
 
@@ -21,6 +22,7 @@ router.get("/:id", getSinglePost);
 router.post("/create", createPost);
 router.post("/comment/:id", addComment);
 router.get("/comments/:id", getComments);
+router.patch("/:id/priority", verifyToken, setPriority);
 router.patch("/status/:id", verifyToken, changeStatus);
 router.patch("/like/:id", likePost);
 router.delete("/delete/:id", verifyToken, deletePost);
