@@ -7,13 +7,15 @@ import connectMongo from "../db.js";
 import authrouter from "../routes/officerRoute.js";
 import postRoute from "../routes/post.route.js";
 
+
 const app = express();
 const port = 8080;
+app.use(express.json({ limit: "50mb" }));   // important for base64 images
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Middleware setup
 // FIX: express.json needs to be called as a function
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
 // Start the database connection immediately
 connectMongo();
 
@@ -26,6 +28,8 @@ app.use('/v1/auth', authrouter)
 //post route 
 app.use('/v1/post', postRoute);
 // Start the server
+
+
 app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
 });

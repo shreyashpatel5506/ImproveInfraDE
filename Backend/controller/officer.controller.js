@@ -30,12 +30,13 @@ export const signUP = async (req, res) => {
         const hashPassword = await bcrypt.hash(password, 10);
         const newOfficer = new Officer({ email, password: hashPassword });
         await newOfficer.save();
-        generateToken(newOfficer._id, res);
+        const token = generateToken(newOfficer._id, res);
 
         return res.status(201).json({
             message: "Officer created ",
             success: true,
             Officer: newOfficer,
+            token
         });
     } catch (error) {
         console.log("error fetching and officer not created ")
@@ -60,12 +61,13 @@ export const login = async (req, res) => {
         }
 
         // Generate token
-        generateToken(officerData._id, res);
+        const token = generateToken(officerData._id, res);
 
         return res.status(200).json({
             message: "Login successful",
             success: true,
-            officer: officerData
+            officer: officerData,
+            token
         });
 
     } catch (error) {
