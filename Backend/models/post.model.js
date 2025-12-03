@@ -12,7 +12,10 @@ const postSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-
+        department: {
+            type: String,
+            required: true
+        },
         category: {
             type: String,
             enum: ["Roads & Traffic", "Water", "Electricity", "Garbage", "Emergency", "Other"],
@@ -24,7 +27,10 @@ const postSchema = new mongoose.Schema(
             enum: ["Pending", "In Progress", "Resolved"],
             default: "Pending",
         },
-
+        imageUrl: {
+            type: String,
+            required: true
+        },
         // Only store Cloudinary public_id
         imagePublicId: {
             type: String,
@@ -94,5 +100,31 @@ export default PostImage;
 
 
 use it <PostImage publicId={post.imagePublicId} />
+
+
+// convert file → base64
+const toBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+  });
+
+// usage
+const base64Image = await toBase64(selectedFile);
+
+const res = await fetch("/api/posts/create", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    title,
+    description,
+    category,
+    department,
+    image: base64Image, // 🔥 send base64 string
+  }),
+});
+
 
 */

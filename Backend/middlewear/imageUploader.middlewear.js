@@ -1,12 +1,14 @@
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+import dotenv from "dotenv"
+dotenv.config()
 
 // Cloudinary config
 cloudinary.config({
-    cloud_name: "dj9l2gzor",
-    api_key: "496374971342376",
-    api_secret: "1VJw73m7TWprJQzXsHMCSCQ1ddc",
+    cloud_name: process.env.cloud_name,
+    api_key: process.env.api_key,
+    api_secret: process.env.api_secret,
 });
 
 // Multer storage (temp file storage)
