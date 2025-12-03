@@ -2,7 +2,9 @@ import { login, signUP } from "../controller/officer.controller";
 import express from express;
 import Officer from "../models/officer.model";
 
-const router = express.router()
+const authrouter = express.router()
 
-router.use('/officerSignup', signUP)
-router.use('/oficerLogin', login)
+authrouter.use('/officerSignup', signUP)
+authrouter.use('/oficerLogin', login)
+
+export default authrouter;
